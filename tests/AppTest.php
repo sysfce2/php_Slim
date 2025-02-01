@@ -13,6 +13,7 @@ namespace Slim\Tests;
 use DI\Container;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestFactoryInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -20,14 +21,13 @@ use Psr\Http\Server\RequestHandlerInterface;
 use RuntimeException;
 use Slim\App;
 use Slim\Builder\AppBuilder;
-use Slim\Container\DefaultDefinitions;
-use Slim\Container\HttpDefinitions;
+use Slim\Error\Renderers\HtmlExceptionRenderer;
 use Slim\Exception\HttpMethodNotAllowedException;
 use Slim\Exception\HttpNotFoundException;
+use Slim\Interfaces\ContainerFactoryInterface;
 use Slim\Interfaces\RequestHandlerInvocationStrategyInterface;
 use Slim\Interfaces\ServerRequestCreatorInterface;
 use Slim\Middleware\BasePathMiddleware;
-use Slim\Middleware\BodyParsingMiddleware;
 use Slim\Middleware\ContentLengthMiddleware;
 use Slim\Middleware\EndpointMiddleware;
 use Slim\Middleware\ErrorHandlingMiddleware;
@@ -57,11 +57,21 @@ final class AppTest extends TestCase
     public function testAppWithExceptionAndErrorDetails(): void
     {
         $builder = new AppBuilder();
-        $builder->setSettings(['display_error_details' => true]);
+        $builder->addDefinitions(
+            [
+                ExceptionHandlingMiddleware::class => function ($container) {
+                    $middleware = ExceptionHandlingMiddleware::createFromContainer($container);
+
+                    return $middleware
+                        ->withDisplayErrorDetails(true)
+                        ->withDefaultHandler(HtmlExceptionRenderer::class);
+                },
+            ]
+        );
         $app = $builder->build();
 
-        $app->add(RoutingMiddleware::class);
         $app->add(ExceptionHandlingMiddleware::class);
+        $app->add(RoutingMiddleware::class);
         $app->add(EndpointMiddleware::class);
 
         $app->get('/', fn () => throw new UnexpectedValueException('Test exception message'));
@@ -95,18 +105,18 @@ final class AppTest extends TestCase
 
     public function testGetContainer(): void
     {
-        $definitions = (new DefaultDefinitions())->__invoke();
-        $definitions = array_merge($definitions, (new HttpDefinitions())->__invoke());
-        $container = new Container($definitions);
+        $factory = new class implements ContainerFactoryInterface {
+            public function createContainer(array $definitions = []): ContainerInterface
+            {
+                return new Container($definitions);
+            }
+        };
 
         $builder = new AppBuilder();
-        $builder->setContainerFactory(function () use ($container) {
-            return $container;
-        });
-
+        $builder->setContainerFactory($factory);
         $app = $builder->build();
 
-        $this->assertSame($container, $app->getContainer());
+        $this->assertInstanceOf(ContainerInterface::class, $app->getContainer());
     }
 
     public function testAppWithMiddlewareStack(): void
@@ -116,7 +126,6 @@ final class AppTest extends TestCase
         $app->add(BasePathMiddleware::class);
         $app->add(RoutingMiddleware::class);
         $app->add(RoutingArgumentsMiddleware::class);
-        $app->add(BodyParsingMiddleware::class);
         $app->add(ErrorHandlingMiddleware::class);
         $app->add(ExceptionHandlingMiddleware::class);
         $app->add(ExceptionLoggingMiddleware::class);
@@ -125,7 +134,7 @@ final class AppTest extends TestCase
 
         $app->get('/', function (ServerRequestInterface $request, ResponseInterface $response) {
             return $response->withHeader('X-Test', 'action');
-        })->add(BodyParsingMiddleware::class);
+        });
 
         $request = $app->getContainer()
             ->get(ServerRequestFactoryInterface::class)

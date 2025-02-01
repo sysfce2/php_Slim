@@ -12,12 +12,15 @@ namespace Slim\Tests\Builder;
 
 use DI\Container;
 use PHPUnit\Framework\TestCase;
+use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestFactoryInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use RuntimeException;
 use Slim\Builder\AppBuilder;
 use Slim\Container\DefaultDefinitions;
 use Slim\Container\HttpDefinitions;
+use Slim\Interfaces\ContainerFactoryInterface;
 use Slim\Middleware\EndpointMiddleware;
 use Slim\Middleware\RoutingMiddleware;
 use Slim\Tests\Traits\AppTestTrait;
@@ -26,70 +29,76 @@ final class AppBuilderTest extends TestCase
 {
     use AppTestTrait;
 
-    public function testSetSettings(): void
+    public function testAddDefinitionsClass(): void
     {
         $builder = new AppBuilder();
-        $builder->setSettings([
-            'key' => 'value',
-        ]);
+        $class = new class {
+            public function __invoke()
+            {
+                return ['foo' => 'bar'];
+            }
+        };
+        $builder->addDefinitionsClass($class::class);
         $app = $builder->build();
-        $app->add(RoutingMiddleware::class);
-        $app->add(EndpointMiddleware::class);
 
-        $request = $app->getContainer()
-            ->get(ServerRequestFactoryInterface::class)
-            ->createServerRequest('GET', '/');
-
-        $app->get('/', function (ServerRequestInterface $request, ResponseInterface $response, $args) {
-            $response->getBody()->write($this->get('settings')['key']);
-
-            return $response;
-        });
-
-        $response = $app->handle($request);
-        $this->assertSame('value', (string)$response->getBody());
+        $this->assertSame('bar', $app->getContainer()->get('foo'));
     }
 
-    public function testSetSettingsMerged(): void
+    public function testAddDefinitionsClassException(): void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Definition file should return an array of definitions');
+
+        $builder = new AppBuilder();
+        $class = new class {
+            public function __invoke()
+            {
+                return null;
+            }
+        };
+        $builder->addDefinitionsClass($class::class);
+        $app = $builder->build();
+
+        $this->assertSame('bar', $app->getContainer()->get('foo'));
+    }
+
+    public function testAddDefinitionsFile(): void
     {
         $builder = new AppBuilder();
-        $builder->setSettings([
-            'key' => 'value',
-            'key2' => 'value2',
-        ]);
-        $builder->setSettings([
-            'key' => 'value3',
-        ]);
+        $builder->addDefinitionsFile(__DIR__ . '/TestContainerDefinition.php');
         $app = $builder->build();
-        $app->add(RoutingMiddleware::class);
-        $app->add(EndpointMiddleware::class);
 
-        $request = $app->getContainer()
-            ->get(ServerRequestFactoryInterface::class)
-            ->createServerRequest('GET', '/');
+        $this->assertSame('bar', $app->getContainer()->get('foo'));
+    }
 
-        $app->get('/', function (ServerRequestInterface $request, ResponseInterface $response) {
-            $settings = $this->get('settings');
-            $response->getBody()->write(json_encode($settings));
+    public function testAddDefinitionsFileError(): void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Definition file should return an array of definitions');
 
-            return $response;
-        });
+        $builder = new AppBuilder();
+        $builder->addDefinitionsFile(__DIR__ . '/TestContainerError.php');
+        $app = $builder->build();
 
-        $response = $app->handle($request);
-        $this->assertSame('{"key":"value3"}', (string)$response->getBody());
+        $this->assertSame('bar', $app->getContainer()->get('foo'));
     }
 
     public function testSetContainerFactory(): void
     {
         $builder = new AppBuilder();
-        $builder->setContainerFactory(function () {
-            $defaults = (new DefaultDefinitions())->__invoke();
-            $defaults = array_merge($defaults, (new HttpDefinitions())->__invoke());
+        $builder->setContainerFactory(
+            new class implements ContainerFactoryInterface {
+                public function createContainer(array $definitions = []): ContainerInterface
+                {
+                    $defaults = (new DefaultDefinitions())->__invoke();
+                    $defaults = array_merge($defaults, (new HttpDefinitions())->__invoke());
 
-            $defaults['foo'] = 'bar';
+                    $defaults['foo'] = 'bar';
 
-            return new Container($defaults);
-        });
+                    return new Container($defaults);
+                }
+            }
+        );
         $app = $builder->build();
         $app->add(RoutingMiddleware::class);
         $app->add(EndpointMiddleware::class);

@@ -10,12 +10,13 @@ declare(strict_types=1);
 
 namespace Slim\Builder;
 
-use DI\Container;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
 use Slim\App;
 use Slim\Container\DefaultDefinitions;
 use Slim\Container\HttpDefinitions;
+use Slim\Container\PhpDiContainerFactory;
+use Slim\Interfaces\ContainerFactoryInterface;
 
 /**
  * This class is responsible for building and configuring a Slim application with a dependency injection (DI) container.
@@ -24,8 +25,6 @@ use Slim\Container\HttpDefinitions;
  * Key functionalities include:
  * - Building the Slim `App` instance with configured dependencies.
  * - Customizing the DI container with user-defined service definitions or a custom container factory.
- * - Setting up middleware in a specified order.
- * - Configuring application settings.
  */
 final class AppBuilder
 {
@@ -35,9 +34,9 @@ final class AppBuilder
     private array $definitions = [];
 
     /**
-     * @var callable|null Factory function for creating a custom DI container
+     * @var ContainerFactoryInterface|null Factory function for creating a custom DI container
      */
-    private $containerFactory = null;
+    private ?ContainerFactoryInterface $containerFactory = null;
 
     /**
      * The constructor.
@@ -46,8 +45,8 @@ final class AppBuilder
      */
     public function __construct()
     {
-        $this->addDefinitions(DefaultDefinitions::class);
-        $this->addDefinitions(HttpDefinitions::class);
+        $this->addDefinitionsClass(DefaultDefinitions::class);
+        $this->addDefinitionsClass(HttpDefinitions::class);
     }
 
     /**
@@ -61,6 +60,78 @@ final class AppBuilder
     }
 
     /**
+     * Sets the service definitions for the DI container.
+     *
+     * @param array $definitions An array of service definitions
+     *
+     * @return self The current instance
+     */
+    public function addDefinitions(array $definitions): self
+    {
+        $this->definitions = array_merge($this->definitions, $definitions);
+
+        return $this;
+    }
+
+    /**
+     * Sets the service definitions for the DI container.
+     *
+     * @param string $class A definition provider class name
+     *
+     * @throws RuntimeException
+     *
+     * @return self The current instance
+     */
+    public function addDefinitionsClass(string $class): self
+    {
+        $definitions = call_user_func(new $class());
+
+        if (!is_array($definitions)) {
+            throw new RuntimeException('Definition file should return an array of definitions');
+        }
+
+        $this->addDefinitions($definitions);
+
+        return $this;
+    }
+
+    /**
+     * Sets the service definitions for the DI container.
+     *
+     * @param string $file A service definitions provider file
+     *
+     * @throws RuntimeException
+     *
+     * @return self The current instance
+     */
+    public function addDefinitionsFile(string $file): self
+    {
+        $definitions = require $file;
+
+        if (!is_array($definitions)) {
+            throw new RuntimeException('Definition file should return an array of definitions');
+        }
+
+        $this->addDefinitions($definitions);
+
+        return $this;
+    }
+
+    /**
+     * Sets a custom factory for creating the DI container.
+     *
+     * @param ContainerFactoryInterface $containerFactory A DI container factory
+     *
+     * @return self The current instance
+     */
+    public function setContainerFactory(ContainerFactoryInterface $containerFactory): self
+    {
+        $this->containerFactory = $containerFactory;
+
+        return $this;
+    }
+
+    /**
      * Creates and configures the DI container.
      *
      * If a custom container factory is set, it will be used to create the container;
@@ -70,74 +141,8 @@ final class AppBuilder
      */
     private function buildContainer(): ContainerInterface
     {
-        return $this->containerFactory
-            ? call_user_func($this->containerFactory, $this->definitions)
-            : new Container($this->definitions);
-    }
+        $this->containerFactory = $this->containerFactory ?? new PhpDiContainerFactory();
 
-    /**
-     * Sets the service definitions for the DI container.
-     *
-     * The method accepts either an array of definitions or the name of a class that provides definitions.
-     * If a class name is provided, its definitions are added to the existing ones.
-     *
-     * @param array|string $definitions An array of service definitions or a class name providing them
-     *
-     * @throws RuntimeException
-     *
-     * @return self The current AppBuilder instance for method chaining
-     */
-    public function addDefinitions(array|string $definitions): self
-    {
-        if (is_string($definitions)) {
-            if (class_exists($definitions)) {
-                $definitions = (array)call_user_func(new $definitions());
-            } else {
-                $definitions = require $definitions;
-
-                if (!is_array($definitions)) {
-                    throw new RuntimeException('Definition file should return an array of definitions');
-                }
-            }
-        }
-
-        $this->definitions = array_merge($this->definitions, $definitions);
-
-        return $this;
-    }
-
-    /**
-     * Sets a custom factory for creating the DI container.
-     *
-     * @param callable $factory A callable that returns a configured DI container
-     *
-     * @return self The current AppBuilder instance for method chaining
-     */
-    public function setContainerFactory(callable $factory): self
-    {
-        $this->containerFactory = $factory;
-
-        return $this;
-    }
-
-    /**
-     * Sets application-wide settings in the DI container.
-     *
-     * This method allows the user to configure various settings for the Slim application,
-     * by passing an associative array of settings.
-     *
-     * @param array $settings An associative array of application settings
-     *
-     * @return self The current AppBuilder instance for method chaining
-     */
-    public function setSettings(array $settings): self
-    {
-        $this->addDefinitions(
-            [
-                'settings' => $settings,
-            ]
-        );
-
-        return $this;
+        return $this->containerFactory->createContainer($this->definitions);
     }
 }
