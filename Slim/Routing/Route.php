@@ -75,7 +75,7 @@ class Route implements RouteInterface, RequestHandlerInterface
     /**
      * Route arguments parameters
      *
-     * @var string[]
+     * @var array<string, string>
      */
     protected array $savedArguments = [];
 

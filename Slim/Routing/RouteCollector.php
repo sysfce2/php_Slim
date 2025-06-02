@@ -253,7 +253,7 @@ class RouteCollector implements RouteCollectorInterface
      */
     protected function createProxy(string $pattern): RouteCollectorProxyInterface
     {
-        /** @var RouteCollectorProxyInterface<TContainerInterface> */
+        /** @var RouteCollectorProxy<TContainerInterface> */
         return new RouteCollectorProxy(
             $this->responseFactory,
             $this->callableResolver,
