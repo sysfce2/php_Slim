@@ -74,8 +74,9 @@ class FastRouteDispatcherTest extends TestCase
      * @param $method
      * @param $uri
      * @param $callback
+     * @param $allowedMethods
      */
-    public function testMethodNotAllowedDispatches($method, $uri, $callback)
+    public function testMethodNotAllowedDispatches($method, $uri, $callback, $allowedMethods)
     {
         /** @var FastRouteDispatcher $dispatcher */
         $dispatcher = simpleDispatcher($callback, $this->generateDispatcherOptions());
