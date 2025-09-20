@@ -47,6 +47,7 @@ class ServerRequestCreatorFactoryTest extends TestCase
      * @param string $psr17factory
      * @param string $expectedServerRequestClass
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('provideImplementations')]
     public function testCreateAppWithAllImplementations(string $psr17factory, string $expectedServerRequestClass)
     {
         Psr17FactoryProvider::setFactories([$psr17factory]);
@@ -72,6 +73,7 @@ class ServerRequestCreatorFactoryTest extends TestCase
     /**
      * @runInSeparateProcess - Psr17FactoryProvider::setFactories breaks other tests
      */
+     #[\PHPUnit\Framework\Attributes\RunInSeparateProcess]
     public function testDetermineServerRequestCreatorThrowsRuntimeException()
     {
         $this->expectException(RuntimeException::class);
@@ -96,6 +98,7 @@ class ServerRequestCreatorFactoryTest extends TestCase
     /**
      * @runInSeparateProcess - ServerRequestCreatorFactory::setServerRequestCreator breaks other tests
      */
+    #[\PHPUnit\Framework\Attributes\RunInSeparateProcess]
     public function testSetServerRequestCreatorWithoutDecorators()
     {
         ServerRequestCreatorFactory::setSlimHttpDecoratorsAutomaticDetection(false);
@@ -117,6 +120,7 @@ class ServerRequestCreatorFactoryTest extends TestCase
     /**
      * @runInSeparateProcess - ServerRequestCreatorFactory::setServerRequestCreator breaks other tests
      */
+    #[\PHPUnit\Framework\Attributes\RunInSeparateProcess]
     public function testSetServerRequestCreatorWithDecorators()
     {
         ServerRequestCreatorFactory::setSlimHttpDecoratorsAutomaticDetection(true);

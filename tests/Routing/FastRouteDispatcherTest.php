@@ -23,6 +23,7 @@ class FastRouteDispatcherTest extends TestCase
     /**
      * @dataProvider provideFoundDispatchCases
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('provideFoundDispatchCases')]
     public function testFoundDispatches($method, $uri, $callback, $handler, $argDict)
     {
         /** @var FastRouteDispatcher $dispatcher */
@@ -59,6 +60,7 @@ class FastRouteDispatcherTest extends TestCase
     /**
      * @dataProvider provideNotFoundDispatchCases
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('provideNotFoundDispatchCases')]
     public function testNotFoundDispatches($method, $uri, $callback)
     {
         /** @var FastRouteDispatcher $dispatcher */
@@ -76,6 +78,7 @@ class FastRouteDispatcherTest extends TestCase
      * @param $callback
      * @param $allowedMethods
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('provideMethodNotAllowedDispatchCases')]
     public function testMethodNotAllowedDispatches($method, $uri, $callback, $allowedMethods)
     {
         /** @var FastRouteDispatcher $dispatcher */
@@ -93,6 +96,7 @@ class FastRouteDispatcherTest extends TestCase
      * @param $callback
      * @param $allowedMethods
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('provideMethodNotAllowedDispatchCases')]
     public function testGetAllowedMethods($method, $uri, $callback, $allowedMethods)
     {
         /** @var FastRouteDispatcher $dispatcher */

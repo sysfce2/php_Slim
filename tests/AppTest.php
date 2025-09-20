@@ -171,6 +171,7 @@ class AppTest extends TestCase
      * @param string $method
      * @dataProvider upperCaseRequestMethodsProvider()
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('upperCaseRequestMethodsProvider')]
     public function testGetPostPutPatchDeleteOptionsMethods(string $method): void
     {
         $streamProphecy = $this->prophesize(StreamInterface::class);
@@ -261,6 +262,8 @@ class AppTest extends TestCase
      * @dataProvider lowerCaseRequestMethodsProvider
      * @dataProvider upperCaseRequestMethodsProvider
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('lowerCaseRequestMethodsProvider')]
+    #[\PHPUnit\Framework\Attributes\DataProvider('upperCaseRequestMethodsProvider')]
     public function testMapRoute(string $method): void
     {
         $streamProphecy = $this->prophesize(StreamInterface::class);
@@ -391,6 +394,7 @@ class AppTest extends TestCase
      * @param string $pattern
      * @dataProvider routePatternsProvider
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('routePatternsProvider')]
     public function testRoutePatterns(string $pattern): void
     {
         $responseFactoryProphecy = $this->prophesize(ResponseFactoryInterface::class);
@@ -539,6 +543,7 @@ class AppTest extends TestCase
      * @param array  $sequence
      * @param string $expectedPath
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('routeGroupsDataProvider')]
     public function testRouteGroupCombinations(array $sequence, string $expectedPath): void
     {
         $responseFactoryProphecy = $this->prophesize(ResponseFactoryInterface::class);

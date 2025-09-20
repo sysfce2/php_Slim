@@ -157,6 +157,7 @@ class MiddlewareDispatcherTest extends TestCase
      * @param string $callable
      * @param callable|MiddlewareInterface
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('deferredCallableProvider')]
     public function testDeferredResolvedCallableWithContainerAndNonAdvancedCallableResolverUnableToResolveCallable(
         $callable,
         $result
