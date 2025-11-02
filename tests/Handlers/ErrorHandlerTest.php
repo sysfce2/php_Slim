@@ -40,15 +40,15 @@ class ErrorHandlerTest extends TestCase
         $class = new ReflectionClass(ErrorHandler::class);
 
         $callableResolverProperty = $class->getProperty('callableResolver');
-        $callableResolverProperty->setAccessible(true);
+        $this->setAccessible($callableResolverProperty);
         $callableResolverProperty->setValue($handler, $this->getCallableResolver());
 
         $reflectionProperty = $class->getProperty('contentType');
-        $reflectionProperty->setAccessible(true);
+        $this->setAccessible($reflectionProperty);
         $reflectionProperty->setValue($handler, 'application/json');
 
         $method = $class->getMethod('determineRenderer');
-        $method->setAccessible(true);
+        $this->setAccessible($method);
 
         $renderer = $method->invoke($handler);
         $this->assertIsCallable($renderer);
@@ -78,15 +78,15 @@ class ErrorHandlerTest extends TestCase
         $class = new ReflectionClass(ErrorHandler::class);
 
         $reflectionProperty = $class->getProperty('responseFactory');
-        $reflectionProperty->setAccessible(true);
+        $this->setAccessible($reflectionProperty);
         $reflectionProperty->setValue($handler, $this->getResponseFactory());
 
         $reflectionProperty = $class->getProperty('exception');
-        $reflectionProperty->setAccessible(true);
+        $this->setAccessible($reflectionProperty);
         $reflectionProperty->setValue($handler, new HttpNotFoundException($request));
 
         $method = $class->getMethod('determineStatusCode');
-        $method->setAccessible(true);
+        $this->setAccessible($method);
 
         $statusCode = $method->invoke($handler);
         $this->assertSame($statusCode, 404);
@@ -133,15 +133,15 @@ class ErrorHandlerTest extends TestCase
         $class = new ReflectionClass(ErrorHandler::class);
 
         $reflectionProperty = $class->getProperty('responseFactory');
-        $reflectionProperty->setAccessible(true);
+        $this->setAccessible($reflectionProperty);
         $reflectionProperty->setValue($handler, $this->getResponseFactory());
 
         $reflectionProperty = $class->getProperty('errorRenderers');
-        $reflectionProperty->setAccessible(true);
+        $this->setAccessible($reflectionProperty);
         $reflectionProperty->setValue($handler, $newErrorRenderers);
 
         $method = $class->getMethod('determineContentType');
-        $method->setAccessible(true);
+        $this->setAccessible($method);
 
         $contentType = $method->invoke($handler, $request);
 
@@ -165,15 +165,15 @@ class ErrorHandlerTest extends TestCase
         $class = new ReflectionClass(ErrorHandler::class);
 
         $reflectionProperty = $class->getProperty('responseFactory');
-        $reflectionProperty->setAccessible(true);
+        $this->setAccessible($reflectionProperty);
         $reflectionProperty->setValue($handler, $this->getResponseFactory());
 
         $reflectionProperty = $class->getProperty('errorRenderers');
-        $reflectionProperty->setAccessible(true);
+        $this->setAccessible($reflectionProperty);
         $reflectionProperty->setValue($handler, $errorRenderers);
 
         $method = $class->getMethod('determineContentType');
-        $method->setAccessible(true);
+        $this->setAccessible($method);
 
         $contentType = $method->invoke($handler, $request);
 
@@ -196,15 +196,15 @@ class ErrorHandlerTest extends TestCase
         $class = new ReflectionClass(ErrorHandler::class);
 
         $reflectionProperty = $class->getProperty('responseFactory');
-        $reflectionProperty->setAccessible(true);
+        $this->setAccessible($reflectionProperty);
         $reflectionProperty->setValue($handler, $this->getResponseFactory());
 
         $reflectionProperty = $class->getProperty('errorRenderers');
-        $reflectionProperty->setAccessible(true);
+        $this->setAccessible($reflectionProperty);
         $reflectionProperty->setValue($handler, $errorRenderers);
 
         $method = $class->getMethod('determineContentType');
-        $method->setAccessible(true);
+        $this->setAccessible($method);
 
         $contentType = $method->invoke($handler, $request);
 
@@ -224,7 +224,7 @@ class ErrorHandlerTest extends TestCase
         // provide access to the determineContentType() as it's a protected method
         $class = new ReflectionClass(ErrorHandler::class);
         $method = $class->getMethod('determineContentType');
-        $method->setAccessible(true);
+        $this->setAccessible($method);
 
         // use a mock object here as ErrorHandler cannot be directly instantiated
         $handler = $this->createMock(ErrorHandler::class);
@@ -242,7 +242,7 @@ class ErrorHandlerTest extends TestCase
 
         $reflectionClass = new ReflectionClass(ErrorHandler::class);
         $reflectionProperty = $reflectionClass->getProperty('errorRenderers');
-        $reflectionProperty->setAccessible(true);
+        $this->setAccessible($reflectionProperty);
         $errorRenderers = $reflectionProperty->getValue($handler);
 
         $this->assertArrayHasKey('application/slim', $errorRenderers);
@@ -255,11 +255,11 @@ class ErrorHandlerTest extends TestCase
 
         $reflectionClass = new ReflectionClass(ErrorHandler::class);
         $reflectionProperty = $reflectionClass->getProperty('defaultErrorRenderer');
-        $reflectionProperty->setAccessible(true);
+        $this->setAccessible($reflectionProperty);
         $defaultErrorRenderer = $reflectionProperty->getValue($handler);
 
         $defaultErrorRendererContentTypeProperty = $reflectionClass->getProperty('defaultErrorRendererContentType');
-        $defaultErrorRendererContentTypeProperty->setAccessible(true);
+        $this->setAccessible($defaultErrorRendererContentTypeProperty);
         $defaultErrorRendererContentType = $defaultErrorRendererContentTypeProperty->getValue($handler);
 
         $this->assertSame(PlainTextErrorRenderer::class, $defaultErrorRenderer);
@@ -396,16 +396,16 @@ class ErrorHandlerTest extends TestCase
         $handler->setLogErrorRenderer('logErrorRenderer');
 
         $displayErrorDetailsProperty = new ReflectionProperty($handler, 'displayErrorDetails');
-        $displayErrorDetailsProperty->setAccessible(true);
+        $this->setAccessible($displayErrorDetailsProperty);
         $displayErrorDetailsProperty->setValue($handler, true);
 
         $exception = new RuntimeException();
         $exceptionProperty = new ReflectionProperty($handler, 'exception');
-        $exceptionProperty->setAccessible(true);
+        $this->setAccessible($exceptionProperty);
         $exceptionProperty->setValue($handler, $exception);
 
         $writeToErrorLogMethod = new ReflectionMethod($handler, 'writeToErrorLog');
-        $writeToErrorLogMethod->setAccessible(true);
+        $this->setAccessible($writeToErrorLogMethod);
         $writeToErrorLogMethod->invoke($handler);
     }
 }

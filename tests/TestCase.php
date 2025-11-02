@@ -20,6 +20,8 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamFactoryInterface;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use ReflectionMethod;
+use ReflectionProperty;
 use Slim\CallableResolver;
 use Slim\Interfaces\CallableResolverInterface;
 use Slim\MiddlewareDispatcher;
@@ -119,5 +121,16 @@ abstract class TestCase extends PhpUnitTestCase
     {
         $psr7ObjectProvider = new PSR7ObjectProvider();
         return $psr7ObjectProvider->createStream($contents);
+    }
+
+    /**
+     * @param  ReflectionProperty|ReflectionMethod  $ref
+     * @return void
+     */
+    protected function setAccessible($ref, bool $accessible = true): void
+    {
+        if (PHP_VERSION_ID < 80100) {
+            $ref->setAccessible($accessible);
+        }
     }
 }
