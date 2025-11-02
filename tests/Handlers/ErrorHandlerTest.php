@@ -10,6 +10,7 @@ declare(strict_types=1);
 
 namespace Slim\Tests\Handlers;
 
+use Prophecy\Argument;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
 use ReflectionClass;
@@ -392,7 +393,16 @@ class ErrorHandlerTest extends TestCase
             ->willReturn($renderer)
             ->shouldBeCalledOnce();
 
-        $handler = new ErrorHandler($callableResolverProphecy->reveal(), $this->getResponseFactory());
+        $loggerProphecy = $this->prophesize(LoggerInterface::class);
+        $loggerProphecy
+            ->error(Argument::type('string'))
+            ->shouldBeCalled();
+
+        $handler = new ErrorHandler(
+            $callableResolverProphecy->reveal(),
+            $this->getResponseFactory(),
+            $loggerProphecy->reveal()
+        );
         $handler->setLogErrorRenderer('logErrorRenderer');
 
         $displayErrorDetailsProperty = new ReflectionProperty($handler, 'displayErrorDetails');
