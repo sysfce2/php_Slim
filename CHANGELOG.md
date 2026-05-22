@@ -15,6 +15,7 @@
 ### Fixed
 
 - Escape HTML entities in HtmlErrorRenderer to prevent XSS attacks ([GHSA-53h4-8rc4-f539](https://github.com/slimphp/Slim/security/advisories/GHSA-53h4-8rc4-f539))
+- Fix static analysis suppression in RouteCollector::removeNamedRoute() (#3445)
 
 **Full Changelog**: https://github.com/slimphp/Slim/compare/4.15.1...4.15.2
 
